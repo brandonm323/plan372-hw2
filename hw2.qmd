@@ -1,0 +1,6 @@
+---
+title: "Plan 372 HW 2"
+author: "Brandon Manrique"
+format: html
+editor: visual
+---
