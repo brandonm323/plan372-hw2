@@ -1,0 +1,220 @@
+---
+title: "Plan 372 HW 2"
+author: "Brandon Manrique"
+format: html
+---
+
+```{r}
+library(tidyverse)
+library(lubridate)
+
+
+```
+
+Load the data from CSV.
+```{r}
+data = read_csv("restaurant_inspections.csv")
+```
+
+## 1. Visualize using historgram
+```{r}
+ggplot(data, aes(x = SCORE)) + geom_histogram()
+```
+)
+
+## 2 Older vs Newer Restaurant Trend
+```{r}
+data$RESTAURANTOPENDATE = ymd_hms(data$RESTAURANTOPENDATE)
+```
+
+```{r}
+data$RESTAURANTOPENDATE = floor_date(data$RESTAURANTOPENDATE, unit = "years")
+```
+
+```{r}
+res_year = data |>
+  group_by(RESTAURANTOPENDATE) |>
+  summarize(mean(SCORE)) |>
+  ungroup()
+res_year
+```
+The data trend seems to show that restaurants opened at a newer date tended to have a more higher average score compared to the ones opened at an earlier date. 
+
+## 3 Data by City
+```{r}
+unique(data$CITY)
+```
+Cleaning the data:
+```{r}
+data$city_clean = case_match(data$CITY, 
+"CARY"~"Cary", 
+"RALEIGH"~"Raleigh", 
+"KNIGHTDALE"~"Knightdale", 
+"CLAYTON"~"Clayton", 
+"FUQUAY VARINA"~"Fuquay Varina",
+"GARNER"~"Garner",
+"MORRISVILLE"~"Morrisville",
+"RESEARCH TRIANGLE PARK"~"Research Triangle Park",
+"RTP"~"Research Triangle Park",
+"WENDELL"~"Wendell",
+"Cary" ~ "Cary",
+"APEX"~"Apex",
+"Apex"~"Apex",
+"WILLOW SPRING"~"Willow Spring",
+"HOLLY SPRINGS"~"Holly Springs",
+"ROLESVILLE"~"Roleseville",
+"ZEBULON"~"Zebulon",
+"Raleigh"~"Raleigh",
+"WAKE FOREST"~"Wake Forest",
+"NEW HILL"~"New Hill",
+"FUQYAY-VARINA"~"Fuquay Varina",
+"Zebulon"~"Zebulon",
+"Morrisville"~"Morrisville",
+"Wake Forest"~"Wake Forest",
+"Holly Springs"~"Holly Springs",
+"ANGIER"~"Angier",
+"Fuquay Varina"~"Fuquay Varina",
+"MORRISVILE"~"Morrisville",
+"Fuquay-Varina"~"Fuquay Varina",
+"HOLLY SPRING"~"Holly Springs",
+"Garner"~"Garner",)
+```
+
+```{r}
+city_score = data |>
+  group_by(data$city_clean) |>
+  summarize(mean(SCORE)) |>
+  ungroup()
+city_score
+```
+The Average Scores vary by city with New Hill and the Research Triangle Park area having the highest median score for their restaurants. 
+
+## 4 Scores by Inspector
+```{r}
+insp_score = data |>
+  group_by(INSPECTOR) |>
+  summarize(mean(SCORE)) |>
+  ungroup()
+insp_score
+```
+The score does vary by inspection with some inspectors having a higher average score compared to others. Thomas Jumalon has the lowest average score compared to the rest. 
+
+## 5 Sample Sizes 
+Sample Sizes by City:
+```{r}
+city_sample_size = data |>
+  group_by(city_clean) |>
+  summarize(Sample_Size = n()) |>
+  ungroup()
+city_sample_size
+```
+
+Sample Sizes by Inspector:
+```{r}
+ins_sample_size = data |>
+  group_by(INSPECTOR) |>
+  summarize(Sample_Size = n()) |>
+  ungroup()
+ins_sample_size
+```
+  
+Sample Sizes by Year:
+```{r}
+library(dplyr)
+yearly_sample = data |>
+  group_by(year(DATE_)) |>
+  summarize(Sample_Size = n()) |>
+  ungroup()
+yearly_sample
+```
+I think the different sample sizes could be a valid explanation as some cities have way more inspections than others. The same thing goes for the individual inspectors and for the years 2021 had the most inspections compared to the other years. 
+
+## 6 Restaurant scores compared to other facilities
+```{r}
+restaurants = subset(data, FACILITYTYPE == "Restaurant")
+non_rest = subset(data, FACILITYTYPE != "Restaurant")
+```
+
+```{r}
+avg_score_restaurants <- mean(restaurants$SCORE, na.rm = TRUE)
+avg_score_non_rest <- mean(non_rest$SCORE, na.rm = TRUE)
+
+avg_score_restaurants
+avg_score_non_rest
+```
+No for the most part restaurants seem to have a lower average score compared to the average scores of the rest of the facilities. 
+
+## 7 Restaurant exclusive analysis
+ Question 1: Histogram
+```{r}
+restaurant_data = data |>
+  filter(FACILITYTYPE == "Restaurant")
+ggplot(restaurant_data, aes(x = SCORE)) + geom_histogram()
+```
+A majority of the restaurants seem to have high scores in the mid 90 to upper 90s
+
+Question 2: Older vs Newer Restaurants
+```{r}
+res_year2 = restaurant_data |>
+  group_by(RESTAURANTOPENDATE) |>
+  summarize(mean(SCORE)) |>
+  ungroup()
+res_year2
+```
+The restaurants seem to all have pretty similar scores based on the year they opened 
+
+Question 3:
+```{r}
+city_score2 = data |>
+  filter(FACILITYTYPE == "Restaurant") |>
+  group_by(city_clean) |>
+  summarize(mean(SCORE, na.rm = TRUE)) |>
+  ungroup()
+city_score2
+```
+For the restaurants in each individual city it seems the scores are pretty consistent with the cities with least sample sizes having a higher average score. 
+
+Question 4:
+```{r}
+insp_score2 = data |>
+  filter(FACILITYTYPE == "Restaurant") |>
+  group_by(INSPECTOR) |>
+  summarize(mean(SCORE, na.rm = TRUE)) |>
+  ungroup()
+insp_score2
+```
+The data once again seems pretty consistent with most inspectors having scores of about mid to high 90s for the restaurants they visited
+
+Question 5:
+Restaurant Sample Size by City:
+```{r}
+city_sample_size2 = data |>
+  filter(FACILITYTYPE == "Restaurant") |>
+  group_by(city_clean) |>
+  summarize(Sample_Size = n()) |>
+  ungroup()
+city_sample_size2
+```
+Raleigh and Cary seem to have the highest number of restaurants 
+
+Restaurant Sample Size by Inspector
+```{r}
+ins_sample_size2 = data |>
+  filter(FACILITYTYPE == "Restaurant") |>
+  group_by(INSPECTOR) |>
+  summarize(Sample_Size = n()) |>
+  ungroup()
+ins_sample_size2
+```
+A majority of the inspectors seem to have dealt with restaurants.
+Restaurant Sample Size by Year
+```{r}
+library(dplyr)
+yearly_sample2 = data |>
+  filter(FACILITYTYPE == "Restaurant") |>
+  group_by(year(DATE_)) |>
+  summarize(Sample_Size = n()) |>
+  ungroup()
+yearly_sample2
+```
+2021 was the year that most inspections seemed to occur for restaurants.
